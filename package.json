@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "swagger-autogen": "node swagger.js",
-    "test": "mocha --timeout 100000 --exit",
+    "test": "mocha test/*.test.js --timeout 20000 --exit",
+    "test:e2e": "mocha test/e2e/*.e2e.js --timeout 120000 --exit",
     "build": "docker build -t ali-automation-tool ."
   },
   "keywords": [],
@@ -21,8 +22,8 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.22.2",
+    "playwright": "1.61.1",
     "process": "^0.11.10",
-    "selenium-webdriver": "^4.1.1",
     "swagger-autogen": "^2.19.0",
     "swagger-ui-express": "^4.3.0"
   },

@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log*
+.git
+.github
+.gitignore
+.idea
+.DS_Store
+test
+probe.mjs
+*.md
