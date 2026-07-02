@@ -34,8 +34,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "chai": "^4.3.6",
-    "chai-http": "^4.3.0",
+    "chai": "^6.2.2",
+    "chai-http": "^5.1.2",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.7.0",

@@ -2,11 +2,12 @@ process.env.NODE_ENV = 'test';
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const { request } = require('chai-http');
 const server = require('../server');
 const ProductController = require('../src/Controllers/ProductController');
 
+chai.use(chaiHttp.default);
 chai.should();
-chai.use(chaiHttp);
 
 // Deterministic fake scraper — the API layer is tested without launching a
 // browser or hitting the network, so CI is fast and reliable.
@@ -29,8 +30,8 @@ describe('Products API (mocked scraper)', () => {
 
   describe('GET /products', () => {
     it('returns the product list contract for a term', (done) => {
-      chai
-        .request(server)
+      request
+        .execute(server)
         .get('/products')
         .query({ term: 'Iphone' })
         .end((err, res) => {
@@ -46,8 +47,8 @@ describe('Products API (mocked scraper)', () => {
     });
 
     it('honours the page query parameter', (done) => {
-      chai
-        .request(server)
+      request
+        .execute(server)
         .get('/products')
         .query({ term: 'Iphone', page: 2 })
         .end((err, res) => {
@@ -58,8 +59,8 @@ describe('Products API (mocked scraper)', () => {
     });
 
     it('returns 400 when term is missing', (done) => {
-      chai
-        .request(server)
+      request
+        .execute(server)
         .get('/products')
         .end((err, res) => {
           res.should.have.status(400);
@@ -74,8 +75,8 @@ describe('Products API (mocked scraper)', () => {
           throw new Error('boom');
         },
       });
-      chai
-        .request(server)
+      request
+        .execute(server)
         .get('/products')
         .query({ term: 'Iphone' })
         .end((err, res) => {
@@ -88,8 +89,8 @@ describe('Products API (mocked scraper)', () => {
 
   describe('GET /product/:id', () => {
     it('returns product detail contract', (done) => {
-      chai
-        .request(server)
+      request
+        .execute(server)
         .get('/product/1005001')
         .end((err, res) => {
           res.should.have.status(200);
