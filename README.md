@@ -48,12 +48,12 @@ curl "http://localhost:8080/product/<id>"
 
 The scraper reads these optional environment variables:
 
-| Variable                   | Purpose                                                         |
-|----------------------------|----------------------------------------------------------------|
-| `PLAYWRIGHT_CHROMIUM_PATH` | Path to a pre-installed Chromium executable (skip the download) |
+| Variable                   | Purpose                                                           |
+| -------------------------- | ----------------------------------------------------------------- |
+| `PLAYWRIGHT_CHROMIUM_PATH` | Path to a pre-installed Chromium executable (skip the download)   |
 | `SCRAPER_PROXY_SERVER`     | Outbound HTTP proxy for the browser (falls back to `HTTPS_PROXY`) |
-| `SCRAPER_USER_AGENT`       | Override the browser User-Agent                                |
-| `SCRAPER_HEADLESS=false`   | Run the browser headed (debugging)                             |
+| `SCRAPER_USER_AGENT`       | Override the browser User-Agent                                   |
+| `SCRAPER_HEADLESS=false`   | Run the browser headed (debugging)                                |
 
 ## Running the tests
 

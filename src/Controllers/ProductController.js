@@ -7,11 +7,11 @@ const ProductScraper = require('../Services/ProductScraper');
 let scraper = new ProductScraper();
 
 exports.setScraper = (instance) => {
-    scraper = instance;
+  scraper = instance;
 };
 
 exports.getProducts = (req, res) => {
-    /**
+  /**
      #swagger.start
      #swagger.path = '/products'
      #swagger.method = 'get'
@@ -41,24 +41,24 @@ exports.getProducts = (req, res) => {
      }
      #swagger.end
      */
-    (async () => {
-        const term = req.query.term;
-        const page = typeof req.query.page === 'undefined' ? 1 : req.query.page;
-        if (!term) {
-            return res.status(400).json({ error: "query parameter 'term' is required" });
-        }
-        try {
-            const result = await scraper.searchProducts(term, page);
-            res.json(result);
-        } catch (e) {
-            console.error('searchProducts failed:', e);
-            res.status(502).json({ error: 'failed to retrieve products', detail: e.message });
-        }
-    })();
+  (async () => {
+    const term = req.query.term;
+    const page = typeof req.query.page === 'undefined' ? 1 : req.query.page;
+    if (!term) {
+      return res.status(400).json({ error: "query parameter 'term' is required" });
+    }
+    try {
+      const result = await scraper.searchProducts(term, page);
+      res.json(result);
+    } catch (e) {
+      console.error('searchProducts failed:', e);
+      res.status(502).json({ error: 'failed to retrieve products', detail: e.message });
+    }
+  })();
 };
 
 exports.getProductById = (req, res) => {
-    /**
+  /**
      #swagger.start
      #swagger.path = '/product/{id}'
      #swagger.method = 'get'
@@ -78,13 +78,13 @@ exports.getProductById = (req, res) => {
      }
      #swagger.end
      */
-    (async () => {
-        try {
-            const result = await scraper.getProductById(req.params.id);
-            res.json(result);
-        } catch (e) {
-            console.error('getProductById failed:', e);
-            res.status(502).json({ error: 'failed to retrieve product', detail: e.message });
-        }
-    })();
+  (async () => {
+    try {
+      const result = await scraper.getProductById(req.params.id);
+      res.json(result);
+    } catch (e) {
+      console.error('getProductById failed:', e);
+      res.status(502).json({ error: 'failed to retrieve product', detail: e.message });
+    }
+  })();
 };

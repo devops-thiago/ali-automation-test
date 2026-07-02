@@ -1,4 +1,4 @@
-var process = require('process')
+var process = require('process');
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -10,10 +10,10 @@ app.listen(8080);
 
 // proper handling signals
 process.on('SIGINT', function onSigint() {
-    process.exit(0)
+  process.exit(0);
 });
 process.on('SIGTERM', function onSigterm() {
-    process.exit(0)
+  process.exit(0);
 });
 
-module.exports = app // for testing
+module.exports = app; // for testing
