@@ -1,11 +1,17 @@
-const webdriver = require('selenium-webdriver');
-const chrome = require("selenium-webdriver/chrome");
-const {By} = require('selenium-webdriver');
+'use strict';
 
-const options = new chrome.Options().headless().addArguments("--no-sandbox", "--disable-dev-shm-usage")
+const ProductScraper = require('../Services/ProductScraper');
 
-exports.getProducts = (req, res, next) => {
-    /**
+// Default singleton scraper. Tests inject a stub via setScraper() so the API
+// layer can be exercised without touching the network or launching a browser.
+let scraper = new ProductScraper();
+
+exports.setScraper = (instance) => {
+  scraper = instance;
+};
+
+exports.getProducts = (req, res) => {
+  /**
      #swagger.start
      #swagger.path = '/products'
      #swagger.method = 'get'
@@ -35,57 +41,24 @@ exports.getProducts = (req, res, next) => {
      }
      #swagger.end
      */
-    (async function () {
-        try {
-            let driver = new webdriver.Builder()
-                .forBrowser('chrome')
-                .setChromeOptions(options)
-                .build();
-            if (typeof req.query.page == 'undefined') {
-                req.query.page = 1
-            }
-            await driver.get(`https://www.aliexpress.com/wholesale?SearchText=${req.query.term}&page=${req.query.page}`);
-            let pixelCount = 200;
-            // alternatively we can use By.css("span.total-page") but in this case we opt to use xpath
-            let totalPageElement = await driver.findElements(By.xpath(".//span[@class='total-page']"))
-            // search results page is dynamically loaded, so we need to keep scrolling down until we reach the page bar,
-            // this way we guarantee we have all the listed products for that page
-            // we scroll down 200px at a time
-            while (totalPageElement.length == 0) {
-                await driver.executeScript(`window.scrollTo(0, ${pixelCount})`);
-                pixelCount += 200;
-                totalPageElement = await driver.findElements(By.xpath(".//span[@class='total-page']"))
-            }
-            // span total-page is unique in the page, so we can safely get the first element of the array
-            let totalPages = await totalPageElement[0].getText();
-            let productElements = await driver.findElements(By.css("._3t7zg._2f4Ho"));
-            let selectedPage = await driver.findElement(By.css("button.next-btn.next-medium.next-btn-normal.next-pagination-item.next-current")).getText()
-            let result = {
-                //total pages is in sentence 'Total \d+ pages', so we grab only the number using regex
-                totalPages: parseInt(totalPages.match(/\d+/)[0]),
-                selectedPage: parseInt(selectedPage),
-                products: []
-            };
-            for (let p of productElements) {
-                let url = await p.getAttribute("href");
-                let name = await p.findElement(By.css("h1._18_85")).getText();
-                let id = url.match(/\d+/)[0]
-                result.products.push({
-                    id: id,
-                    name: name,
-                    url: url
-                });
-            }
-            await driver.quit();
-            res.json(result);
-        } catch (e) {
-            console.log(e);
-        }
-    })();
+  (async () => {
+    const term = req.query.term;
+    const page = typeof req.query.page === 'undefined' ? 1 : req.query.page;
+    if (!term) {
+      return res.status(400).json({ error: "query parameter 'term' is required" });
+    }
+    try {
+      const result = await scraper.searchProducts(term, page);
+      res.json(result);
+    } catch (e) {
+      console.error('searchProducts failed:', e);
+      res.status(502).json({ error: 'failed to retrieve products', detail: e.message });
+    }
+  })();
 };
 
-exports.getProductById = (req, res, next) => {
-    /**
+exports.getProductById = (req, res) => {
+  /**
      #swagger.start
      #swagger.path = '/product/{id}'
      #swagger.method = 'get'
@@ -105,25 +78,13 @@ exports.getProductById = (req, res, next) => {
      }
      #swagger.end
      */
-    (async function () {
-        try {
-            let driver = new webdriver.Builder()
-                .forBrowser('chrome')
-                .setChromeOptions(options)
-                .build();
-            await driver.get(`https://www.aliexpress.com/item/${req.params.id}.html`);
-            let productName = await driver.findElement(By.css("h1.product-title-text")).getText();
-            let productPrice = await driver.findElement(By.css("span.product-price-value")).getText();
-            let productInStock = await driver.findElement(By.css("div.product-quantity-info")).getText();
-            await driver.quit();
-            res.json({
-                productName: productName,
-                productPrice: productPrice,
-                //available stock is in sentence '\d+ Pieces available', so we grab only the number using regex
-                productInStock: parseInt(productInStock.match(/\d+/)[0])
-            });
-        } catch (e) {
-            console.log(e)
-        }
-    })();
+  (async () => {
+    try {
+      const result = await scraper.getProductById(req.params.id);
+      res.json(result);
+    } catch (e) {
+      console.error('getProductById failed:', e);
+      res.status(502).json({ error: 'failed to retrieve product', detail: e.message });
+    }
+  })();
 };

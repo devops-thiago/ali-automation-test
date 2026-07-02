@@ -6,8 +6,14 @@
   "scripts": {
     "start": "node server.js",
     "swagger-autogen": "node swagger.js",
-    "test": "mocha --timeout 100000 --exit",
-    "build": "docker build -t ali-automation-tool ."
+    "test": "mocha test/*.test.js --timeout 20000 --exit",
+    "test:e2e": "mocha test/e2e/*.e2e.js --timeout 120000 --exit",
+    "build": "docker build -t ali-automation-tool .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "audit": "npm audit --audit-level=moderate"
   },
   "keywords": [],
   "author": "Thiago Gonzaga",
@@ -21,14 +27,23 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.22.2",
+    "playwright": "1.61.1",
     "process": "^0.11.10",
-    "selenium-webdriver": "^4.1.1",
     "swagger-autogen": "^2.19.0",
     "swagger-ui-express": "^4.3.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "chai": "^4.3.6",
     "chai-http": "^4.3.0",
-    "mocha": "^11.7.6"
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "mocha": "^11.7.6",
+    "prettier": "^3.7.4"
+  },
+  "overrides": {
+    "diff": "^8.0.3",
+    "serialize-javascript": "^7.0.7"
   }
 }

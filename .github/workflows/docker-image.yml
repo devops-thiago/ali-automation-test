@@ -1,23 +1,71 @@
-name: Docker Image CI
+name: CI
+
+# Fixes the previous startup_failure: this repo's policy requires every action
+# to be from a GitHub-created/verified source AND pinned to a full-length commit
+# SHA. The only third-party action used here is actions/checkout (GitHub-created,
+# SHA-pinned); everything else uses tooling already present on the runner.
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-
-  build:
-
+  test:
+    name: Test
     runs-on: ubuntu-latest
-
+    env:
+      # The mocked API tests never launch a browser, so skip the Chromium
+      # download during `npm ci` to keep CI fast.
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:
-    - uses: actions/setup-node@v2
-      with:
-        node-version: '17.x'
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: npm run build
-    - name: Run tests
-      run: docker run --rm ali-automation-tool npm test
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=moderate
+
+      - name: Run tests (mocked, deterministic)
+        run: npm test
+
+  publish:
+    name: Build & publish image
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push image tagged by commit SHA
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          SHORT_SHA="$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          docker build -t "${IMAGE}:sha-${SHORT_SHA}" -t "${IMAGE}:latest" .
+          docker push "${IMAGE}:sha-${SHORT_SHA}"
+          docker push "${IMAGE}:latest"
+          echo "Published ${IMAGE}:sha-${SHORT_SHA}"

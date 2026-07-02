@@ -1,6 +1,6 @@
 # ali-automation-test
 
-Automated test example of [aliexpress.com]() website.
+Automated test example of [aliexpress.com](https://www.aliexpress.com) website.
 
 For testing purposes we assume that this is a REST API which returns the search results for a given term and product
 details.
@@ -13,18 +13,23 @@ details.
 
 # Prerequisites
 
-- nodejs 17.x
+- Node.js 20.x (LTS)
 - Docker
-- Google Chrome
-- chromedriver (http://chromedriver.storage.googleapis.com). It should match your Google Chrome version.
+
+Browser automation uses [Playwright](https://playwright.dev), which manages its own Chromium build — there is no
+longer any need to install Google Chrome or a matching `chromedriver` manually.
 
 ## Installing the dependencies
 
 In the project directory, you can run:
 
-`npm install`
+```
+npm install
+npx playwright install --with-deps chromium
+```
 
-It will install the required node dependencies.
+The first command installs the Node dependencies; the second downloads the Chromium build Playwright drives (skip it if
+you run inside the Docker image below, which already ships with Chromium).
 
 ## Running the project
 
@@ -32,32 +37,49 @@ In the project directory, you can run:
 
 `npm start`
 
-It runs the app in the development mode. Open http://localhost:8080 to view it in your browser.
+It runs the app on http://localhost:8080. Example requests:
+
+```
+curl "http://localhost:8080/products?term=Iphone"
+curl "http://localhost:8080/product/<id>"
+```
+
+### Configuration
+
+The scraper reads these optional environment variables:
+
+| Variable                   | Purpose                                                           |
+| -------------------------- | ----------------------------------------------------------------- |
+| `PLAYWRIGHT_CHROMIUM_PATH` | Path to a pre-installed Chromium executable (skip the download)   |
+| `SCRAPER_PROXY_SERVER`     | Outbound HTTP proxy for the browser (falls back to `HTTPS_PROXY`) |
+| `SCRAPER_USER_AGENT`       | Override the browser User-Agent                                   |
+| `SCRAPER_HEADLESS=false`   | Run the browser headed (debugging)                                |
 
 ## Running the tests
 
-In the project directory, you can run:
+```
+npm test        # fast, deterministic API tests with the scraper mocked (no network)
+npm run test:e2e   # live end-to-end scraping against aliexpress.com (needs network egress)
+```
 
-`npm test`
-
-It launches the test runner in the interactive watch mode.
+`npm test` is what CI runs — it stubs the scraper so it never touches the network. `npm run test:e2e` drives the real
+Playwright scraper against the live site and is expected to be run locally or on a scheduled job where outbound access
+to `aliexpress.com` is allowed.
 
 ## Building for production
 
-In the project directory, you can run:
-
 `npm run build`
 
-It builds the docker image ready for production containing Google Chrome, chromedriver and nodejs as well.
+It builds a Docker image based on the official Playwright image (Chromium + Node.js included). After building:
 
-After building the image, you can run:
+`docker run -d --rm -p 8080:8080 ali-automation-tool`
 
-`docker run -d --rm -p 8080:8080 ali-automation-tool start`
+CI also builds and publishes this image to the GitHub Container Registry (GHCR) tagged with the git commit SHA:
+
+`ghcr.io/devops-thiago/ali-automation-test:sha-<commit>`
 
 ## Generating Swagger API Doc
 
-In the project directory, you can run:
-
 `npm run swagger-autogen`
 
-After that, run the project and heck http://localhost:8080/doc for Swagger API documentation
+After that, run the project and check http://localhost:8080/doc for Swagger API documentation.
