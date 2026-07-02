@@ -38,7 +38,7 @@
     "chai-http": "^4.3.0",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
-    "globals": "^16.5.0",
+    "globals": "^17.7.0",
     "mocha": "^11.7.6",
     "prettier": "^3.7.4"
   },
